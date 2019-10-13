@@ -19,7 +19,7 @@ def getbytype(request: HttpRequest, typeid):  # 类型
     typemap = {1: '奇幻玄幻', 2: '武侠仙侠', 3: '历史军事', 4: '都市娱乐'}
     t = typemap.get(int(typeid), 'All')
     page = validate(request.GET, 'page', int, 1, lambda x, y: x if x > 0 else 1)
-    size = validate(request.GET, 'size', int, 12, lambda x, y: x if 101 > x > 0 else y)
+    size = validate(request.GET, 'size', int, 9, lambda x, y: x if 101 > x > 0 else y)
 
     try:
         start = (page - 1) * size
@@ -92,7 +92,7 @@ def getbynovel(request: HttpRequest, novelid):  # 章节
 def getcontent(request: HttpRequest, contentid):  # 正文
     try:
         post = Chapter.objects.filter(content_id=contentid).get()
-        paragraph = post.content.content.split('|')
+        paragraph = post.content.content
         chapterslist = Chapter.objects.filter(novel_id=post.novel_id)
         print(chapterslist)
         return JsonResponse({
@@ -106,10 +106,7 @@ def getcontent(request: HttpRequest, contentid):  # 正文
                 'noveltype': post.novel.noveltype,
                 'chapterslist': [i.content_id for i in chapterslist]
             },
-            'posts': [{
-                'id': i,
-                'paragraph': paragraph[i]
-            } for i in range(len(paragraph))]
+            'posts': paragraph
         })
     except Exception as e:
         print(e)
