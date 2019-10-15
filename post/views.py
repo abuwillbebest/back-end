@@ -3,6 +3,8 @@
 # Create your views here.
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
 from .models import Novel, Chapter
+from django.db.models import Q
+import simplejson
 import math
 
 
@@ -94,7 +96,7 @@ def getcontent(request: HttpRequest, contentid):  # 正文
         post = Chapter.objects.filter(content_id=contentid).get()
         paragraph = post.content.content
         chapterslist = Chapter.objects.filter(novel_id=post.novel_id)
-        print(chapterslist)
+
         return JsonResponse({
             'info': {
                 'novel_id': post.novel_id,
@@ -107,6 +109,29 @@ def getcontent(request: HttpRequest, contentid):  # 正文
                 'chapterslist': [i.content_id for i in chapterslist]
             },
             'posts': paragraph
+        })
+    except Exception as e:
+        print(e)
+        return HttpResponseBadRequest()
+
+
+def search(request: HttpRequest):  # 搜索
+    try:
+        payload = simplejson.loads(request.body)
+        ret = payload['words'].strip()
+        print(ret)
+        rets = Novel.objects.filter(Q(title__icontains=ret) | Q(author__icontains=ret) | Q(tags__icontains=ret))
+        return JsonResponse({
+            'results': [
+                {
+                    'title': r.title,
+                    'desc': r.desc,
+                    'author': r.author,
+                    'noveltype': r.noveltype,
+                    'tags': r.tags,
+                    'id': r.id
+                } for r in rets
+            ],
         })
     except Exception as e:
         print(e)
